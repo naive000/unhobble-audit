@@ -44,15 +44,25 @@ claude -p "Reply with exactly: ok" --output-format json
 
 掃我的對話記錄,統計每個 skill 實際被觸發過幾次:
 
+**skill 有兩條完全不同的觸發路徑,只掃一條會產生大量假殭屍。**必須兩條都掃:
+
 ```bash
+# 來源一:模型讀 description 自動觸發(記成 Skill 工具呼叫)
 grep -rho '"name":"Skill","input":{[^}]*}' ~/.claude/projects --include='*.jsonl' 2>/dev/null \
-  | grep -o '"skill":"[^"]*"' | sed 's/.*:"//;s/"//' | sed 's/.*://' \
-  | sort | uniq -c | sort -rn
+  | grep -o '"skill":"[^"]*"' | sed 's/.*:"//;s/"//;s/.*://' | sort | uniq -c
+
+# 來源二:使用者手打 /名稱(記成 command-name,完全不同的格式)
+grep -rho '<command-name>/[a-z0-9:_-]*</command-name>' ~/.claude/projects --include='*.jsonl' 2>/dev/null \
+  | sed 's/<[^>]*>//g;s|^/||;s/.*://' | sort | uniq -c
 ```
 
-然後跟 `~/.claude/skills/` 底下實際安裝的清單交叉比對,列出**從未觸發過的**。
+把兩份數字相加,再跟 `~/.claude/skills/` 實際安裝清單交叉比對,**兩邊都是 0 的才算殭屍**。
 
-注意:記錄可能有上千個檔案,grep 要給 timeout;plugin skill 名稱格式是 `plugin:skill`,最後那個 `sed` 是為了正規化。
+作者在自己機器上第一版只掃來源一,得到「20/34 從未觸發」;補上來源二之後真實數字是 16/34——其中一個被誤判的 skill 實際上被手動叫過 37 次。只掃一條路徑會害人刪掉天天在用的東西。
+
+**已知剩餘盲區(要在報告裡誠實標註)**:被 cron / 排程 / 外部腳本驅動的 skill,可能兩條路徑都不留痕跡。次數 0 只代表「這兩種入口沒看到」,不等於沒用——出報告時要把 0 次的項目標成「待確認」而不是「確定可刪」。
+
+實務注意:記錄可能上千個檔案,grep 要給 timeout;plugin skill 名稱是 `plugin:skill` 格式,尾端 `sed` 負責正規化。
 
 ## Phase 4 — 規則年齡
 
@@ -92,7 +102,7 @@ Boris 說 verification 是最多人做不好的單一件事——不是 prompt e
 **② 可分享的數字卡**——只有數字、**不含任何規則內容或路徑**,例如:
 ```
 常駐 overhead: 54,042 tokens/turn
-Skills: 34 個,20 個從未觸發 (59%)
+Skills: 34 個,16 個從未觸發 (47%)
 Skill descriptions: 46 KB 常駐
 Memory: 96 檔 / 索引 20 KB
 ```
