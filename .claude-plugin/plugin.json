@@ -1,0 +1,6 @@
+{
+  "name": "unhobble-audit",
+  "version": "0.1.0",
+  "description": "稽核你的 Claude Code 設定:量出常駐 token 成本、抓出從未觸發的殭屍 skill、分出哪些規則只是舊模型的補丁。唯讀,不會幫你刪。",
+  "commands": ["./commands/unhobble.md"]
+}
