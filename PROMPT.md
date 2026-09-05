@@ -24,9 +24,17 @@ Claude Code 作者 Boris Cherny 在 2026-07-27 的 Y Combinator 對談中提到,
 
 - `CLAUDE.md` / `AGENTS.md` 各層的 bytes 與行數
 - skill 數量,以及**所有 skill description 的合計 bytes**(這是每個 session 的固定租金——skill 的 description 不管有沒有觸發都常駐在 context)
+
+  ⚠️ **路徑必須精確,否則數字會差一個數量級。**只算 `~/.claude/skills/*/SKILL.md` 和專案層 `./.claude/skills/*/SKILL.md`——這些才是真正載入 context 的。
+  **絕對不要** `find ~/.claude -name SKILL.md`:`plugins/cache/`、`plugins/marketplaces/`、`local-marketplaces/`、`jobs/` 底下有大量已下載但未啟用的 marketplace 原始碼。作者機器上這樣掃會得到約 690 個,真實載入數是 34,差 20 倍
 - memory 檔數與索引檔大小(路徑含專案 slug,要自己找,很多人根本沒有這個目錄)
 - hook 檔數
 - MCP server 數與工具總數
+
+
+## 執行注意
+
+若這台機器裝了會改寫 bash 輸出的工具(輸出看起來被異常精簡或重排),shell pipeline 的統計會失真。這種情況改用 Python(`os.walk` + 直接讀檔)重跑一次,不要相信被改寫過的數字。
 
 ## Phase 2 — 真實 token 成本(要花我一次 API 額度,先問我)
 
